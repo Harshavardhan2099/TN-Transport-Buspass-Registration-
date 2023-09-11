@@ -18,19 +18,29 @@ layout = [
     [sg.Text('Address 3', size = (15, 1)), sg.InputText(key = 'Address3')],
     [sg.Text('From', size = (15, 1)), sg.InputText(key = 'From')],
     [sg.Text('To', size = (15, 1)), sg.InputText(key = 'To')],
+    [sg.Text('Distance(in Kms)', size = (15, 1)), sg.InputText(key = 'Distance')],
+    [sg.Text('Fare ($)', size = (15, 1)), sg.InputText(key = 'Fare')],
 
-    [sg.Submit(), sg.Exit()]
+    [sg.Submit(), sg.Button('Clear'), sg.Exit()]
 ]
 
 window = sg.Window('Bus-Pass Registration', layout)
+
+def clear_input():
+    for key in values:
+        window[key](' ')
+    return None
 
 while True:
     event, values = window.read()
     if event == sg.WIN_CLOSED or event == 'Exit':
         break
+    if event == 'Clear':
+        clear_input()
     if event == 'Submit':
         dd = dd._append(values, ignore_index = True)
         dd.to_excel(EXCEL_FILE, index = False)
         sg.popup('Data saved!')
+        clear_input()
 
 window.close()
