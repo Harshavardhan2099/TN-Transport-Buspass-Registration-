@@ -9,7 +9,22 @@ from pdf_gen import PdfGenerator
 
 Sg.theme('DarkTeal9')  # Setting theme
 EXCEL_FILE = 'Data.xlsx'
-dd = pd.read_excel(EXCEL_FILE)
+try:
+    dd = pd.read_excel(EXCEL_FILE)
+except FileNotFoundError:
+    # Sg.popup_error("Excel Sheet Not Found")
+    workbook = Workbook()
+    sheet = workbook.active
+    data = [
+        ["ApplicationNumber", "Name", "Class", "Section", "Address1", "Address2", "Address3",
+         "From", "To", "Distance", "Fare"]
+    ]
+    for row in data:
+        sheet.append(row)
+    # Save the workbook to a file
+    excel_file_path = "Data.xlsx"
+    workbook.save(excel_file_path)
+    dd = pd.read_excel(EXCEL_FILE)
 cam = cv2.VideoCapture(0)  # Selecting first Camera (front Camera)
 cam_open = False
 img_counter = 0
