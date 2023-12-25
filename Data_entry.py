@@ -1,76 +1,91 @@
-import PySimpleGUI as sg
+# Necessary imports
+
+import PySimpleGUI as Sg
 import pandas as pd
 import cv2
+from pdf_gen import PdfGenerator
 
-#------------------------------
+# ------------- Config ----------------- #
 
-sg.theme('DarkTeal9')
-
-#-------------------------------
-
+Sg.theme('DarkTeal9')  # Setting theme
 EXCEL_FILE = 'Data.xlsx'
 dd = pd.read_excel(EXCEL_FILE)
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(0)  # Selecting first Camera (front Camera)
+cam_open = False
 img_counter = 0
 
-#-------------------------------
+# -------------- Layout design ----------------- #
 layout = [
-    [sg.Text(' ', size = (10)), sg.Text('TamilNadu Transport Corporation - Kumbakonam')],
-    [sg.Text('Ranees Govt. Hr. Sec. School', size = (40,1)), sg.Text('School Code: 199')],
-    [sg.Text('Name', size = (15, 1)), sg.InputText(key = 'Name')],
-    [sg.Text('Class', size = (15, 1)), sg.Combo(['6','7','8','9','10','11','12'], key = 'Class')],
-    [sg.Text('Section', size = (15,1)), sg.InputText(key = 'Section')],
-    [sg.Text('Address 1', size = (15, 1)), sg.InputText(key = 'Address1')],
-    [sg.Text('Address 2', size = (15, 1)), sg.InputText(key = 'Address2')],
-    [sg.Text('Address 3', size = (15, 1)), sg.InputText(key = 'Address3')],
-    [sg.Text('From', size = (15, 1)), sg.InputText(key = 'From')],
-    [sg.Text('To', size = (15, 1)), sg.InputText(key = 'To')],
-    [sg.Text('Distance(in Kms)', size = (15, 1)), sg.InputText(key = 'Distance')],
-    [sg.Text('Fare ($)', size = (15, 1)), sg.InputText(key = 'Fare')],
+    [Sg.Text(' ', size=10), Sg.Text('TamilNadu Transport Corporation - Kumbakonam')],
+    [Sg.Text('Ranees Govt. Hr. Sec. School', size=(40, 1)), Sg.Text('School Code: 199')],
+    [Sg.Text('App.No.', size=(15, 1)), Sg.InputText(key='ApplicationNumber')],
+    [Sg.Text('Name', size=(15, 1)), Sg.InputText(key='Name')],
+    [Sg.Text('Class', size=(15, 1)), Sg.Combo(['6', '7', '8', '9', '10', '11', '12'], key='Class')],
+    [Sg.Text('Section', size=(15, 1)), Sg.InputText(key='Section')],
+    [Sg.Text('Address 1', size=(15, 1)), Sg.InputText(key='Address1')],
+    [Sg.Text('Address 2', size=(15, 1)), Sg.InputText(key='Address2')],
+    [Sg.Text('Address 3', size=(15, 1)), Sg.InputText(key='Address3')],
+    [Sg.Text('From', size=(15, 1)), Sg.InputText(key='From')],
+    [Sg.Text('To', size=(15, 1)), Sg.InputText(key='To')],
+    [Sg.Text('Distance(in Kms)', size=(15, 1)), Sg.InputText(key='Distance')],
+    [Sg.Text('Fare (₹)', size=(15, 1)), Sg.InputText(key='Fare')],
 
-    [sg.Submit(), sg.Button("Camera"), sg.Button('Clear'), sg.Exit()]
+    [Sg.Submit(), Sg.Button("Camera"), Sg.Button('Clear'), Sg.Button("Generate Report"), Sg.Exit()]
 ]
-#-------------------------------
-window = sg.Window('Bus-Pass Registration', layout)
 
-def clear_input():
+window = Sg.Window('Bus-Pass Registration', layout)
+
+
+# ---------------- functions --------------- #
+
+def clear_input():  # clear function
     for key in values:
         window[key](' ')
     return None
 
+
 while True:
     event, values = window.read()
-    if event == sg.WIN_CLOSED or event == 'Exit':
+    if event == Sg.WIN_CLOSED or event == 'Exit':   # Exit button
         break
-    if event == 'Clear':
+    elif event == 'Clear':    # clear button
         clear_input()
-    if event == 'Submit':
-        dd = dd._append(values, ignore_index = True)
-        dd.to_excel(EXCEL_FILE, index = False)
-        sg.popup('Data saved!')
+
+    elif event == 'Submit':    # submit button
+        dd = dd._append(values, ignore_index=True)
+        dd.to_excel(EXCEL_FILE, index=False)
+        Sg.popup('Data saved!')
         clear_input()
-    if event == 'Camera':
+
+    elif event == "Generate Report":    # Generate report in pdf
+        pdff = PdfGenerator()
+        pdff.pdf_generation()
+
+    elif event == 'Camera':    # Camera button
         cv2.namedWindow("Image Capture")
         while True:
-            ret, frame = cam.read()
+            success, frame = cam.read()
+            if not success:
+                cam = cv2.VideoCapture(0)
+            else:
+                cv2.imshow("Test", frame)
+                k = cv2.waitKey(1)      # waiting for a keyboard interrupt
 
-            if not ret:
-                print("Failed to grab frame")
-                break
-            cv2.imshow("Test", frame)
-            k = cv2.waitKey(1)
+                # ------- Keyboard interrupts -------- #
+                if k % 256 == 27:  # if escape key is pressed
+                    Sg.popup("Camera Closed")
+                    cam.release()
+                    break
 
-            if k%256 == 27:
-                print("Escape hit, closing the app")
-                break
+                elif k % 256 == 32:  # if space bar is pressed
+                    img_name = f"opencv_frame_{img_counter}.png"
+                    cv2.imwrite(img_name, frame)
+                    Sg.popup("Image Captured")
+                    img_counter += 1
 
-            elif k%256 == 32:
-                img_name = "opencv_frame_{}.png".format(img_counter)
-                cv2.imwrite(img_name, frame)
-                print("Image Captured")
-                img_counter += 1
-        cam.release()
         cv2.destroyAllWindows()
-#-----------------------
+        cam.release()
+
+# -----------------------
 window.close()
-#------------------------
+# ------------------------
