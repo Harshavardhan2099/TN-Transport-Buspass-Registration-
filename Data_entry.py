@@ -4,6 +4,7 @@ import PySimpleGUI as Sg
 import pandas as pd
 import cv2
 from pdf_gen import PdfGenerator
+from openpyxl import Workbook
 
 # ------------- Config ----------------- #
 
@@ -27,7 +28,7 @@ except FileNotFoundError:
     dd = pd.read_excel(EXCEL_FILE)
 cam = cv2.VideoCapture(0)  # Selecting first Camera (front Camera)
 cam_open = False
-img_counter = 0
+img_counter = len(dd)
 
 # -------------- Layout design ----------------- #
 layout = [
