@@ -4,6 +4,7 @@ import PySimpleGUI as Sg
 import pandas as pd
 import cv2
 from pdf_gen import PdfGenerator
+from openpyxl import Workbook
 
 # ------------- Config ----------------- #
 
